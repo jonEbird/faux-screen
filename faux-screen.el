@@ -47,6 +47,33 @@
   :group 'faux-screen
   :type 'string)
 
+(defcustom faux-screen-hide-buffers t
+  "Attempt to hide buffers from switch-buffer (C-x b)"
+  :group 'faux-screen
+  :type 'boolean)
+
+(defcustom faux-screen-num-terminals 8
+  "Number of terminals to launch by default"
+  :group 'faux-screen
+  :type 'integer)
+
+(defcustom faux-screen-shell "/bin/bash"
+  "Default shell to use when creating new shells"
+  :group 'faux-screen
+  :type 'string)
+
+(defcustom faux-screen-inferior-shell nil
+  "Use inferior shell (M-x shell) over default ansi-term"
+  :group 'faux-screen
+  :type 'boolean)
+
+(defcustom faux-screen-terminal-ps1 "(\\[\\e[1;32m\\]%d\\[\\e[0m\\]) \\W $ "
+  "Preferred PS1 syntax to be set in env var EMACS_PS1 that you can use
+within your shell's dotfiles. A single '%d' in the prompt will be replaced
+with the term number that is being launched."
+  :group 'faux-screen
+  :type 'string)
+
 
 ;; Key bindings
 
@@ -73,7 +100,12 @@
   :keymap faux-screen-mode-map
   :group 'faux-screen
   :require 'faux-screen
-  )
+  (cond
+   (faux-screen-mode
+    (faux-screen-init)
+    (add-hook 'term-mode-hook 'faux-screen-setup))
+   (t
+    (remove-hook 'term-mode-hook 'faux-screen-setup t))))
 
 ;;;###autoload
 (define-globalized-minor-mode faux-screen-global-mode
@@ -136,7 +168,14 @@ subtract 1 and go to a buffer of that name if it exists."
            (previous-buffer)))))
 
 
-;;; Term hook setup
+;;; Faux Screen Setup functions
+
+(defun faux-screen-init ()
+  "One time init function to help setup common items"
+  ; Optionally hide shells from ido switch buffer
+  (if faux-screen-hide-buffers
+      (if (boundp 'ido-ignore-buffers)
+          (add-to-list 'ido-ignore-buffers "Shell " t))))
 
 (defun faux-screen-setup ()
   "Perform sane setup for a term. Intended to be ran within a hook upon
@@ -154,7 +193,8 @@ creation of the term such as term-mode-hook."
   (auto-fill-mode -1)
   (setq tab-width 8 ))
 
-(add-hook 'term-mode-hook 'faux-screen-setup)
+
+;;; Main Interactive functions that user will call
 
 (defun faux-screen-terminals (&optional N shell inferior)
   "Create a set of commonly used terminals ala GNU screen.
@@ -166,25 +206,21 @@ launch shell (the inferior shell) instead of ansi-term."
   (interactive)
   (let ((escape-key faux-screen-keymap-prefix)
         (started-terms '())
-        (times (or N 8))
+        (times (or N faux-screen-num-terminals))
         (default-directory (expand-file-name "~/"))
-        (explicit-shell-file-name (or shell "/bin/bash")))
+        (explicit-shell-file-name (or shell faux-screen-shell)))
     (dotimes (n times)
       (let* ((shell-name (format "Shell %d" n))
              (buffer-name (format "*%s*" shell-name)))
-        ;; (global-set-key (kbd (format "%s %s" escape-key n))
-        ;;                 `(lambda ()
-        ;;                    (interactive)
-        ;;                    (switch-to-buffer ,buffer-name nil t)))
         (define-key faux-screen-command-map (kbd (format "%d" n))
           `(lambda ()
              (interactive)
              (switch-to-buffer ,buffer-name nil t)))
         (unless (get-buffer buffer-name)
           (add-to-list 'started-terms n t)
-          (setenv "EMACS_PS1" (format "(\\[\\e[1;32m\\]%d\\[\\e[0m\\]) \\W $ " n))
+          (setenv "EMACS_PS1" (format faux-screen-terminal-ps1 n))
           (save-window-excursion
-            (if inferior
+            (if (or inferior faux-screen-inferior-shell)
                 (shell buffer-name)
               (ansi-term explicit-shell-file-name shell-name)))
           (with-current-buffer buffer-name

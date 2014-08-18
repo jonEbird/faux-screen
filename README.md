@@ -15,38 +15,57 @@ I tend to use el-get and here is a recipe:
     (:name faux-screen
            :description "Faux Gnu Screen in Emacs"
            :type github
-           :pkgname "jonEbird/faux-screen")
+           :pkgname "jonEbird/faux-screen"
+           :depends (term+ term+ki term+mux))
 
-You can otherwise clone the repo and update your `load-path` appropriately.
+You can otherwise clone the repo and update your `load-path`
+appropriately. If you do go this route, you'll want to install
+[term+](tarao/term-plus-el), [term+ki](tarao/term-plus-ki-el) and
+[term+mux](tarao/term-plus-mux-el). Those are all links to the correct
+project pages but I'd suggest using package.el and install them that
+way. Something like:
+
+    (dolist (package '(term+ term+key-intercept term+mux))
+      (package-install package))
 
 Configuration
 ------------------------------
 
 Quick start. Add this block to your config:
 
+    (setq faux-screen-shell "/bin/bash"
+          faux-screen-num-terminals 10
+          faux-screen-keymap-prefix (kbd "C-\\")
+          faux-screen-terminal-ps1 "(\\[\\e[1;36m\\]%d\\[\\e[0m\\]) \\W $ ")
     (require 'faux-screen)
     (faux-screen-global-mode)
-    (faux-screen-terminals 10)
 
-In that example, I'm starting 10 ansi terminals. If you prefer to use
-regular `term`, then you can call:
+In that example, I'm starting 10 ansi terminals. Most of those values are also defaults but I'm just re-defining them as an example for those that want to change the values a bit.
 
-    (faux-screen-terminals 10 nil t)
+An easy way to get an idea of the options available with this project is to
+use the customize routines. Run M-x `customize-group` RET `faux-screen`
+RET. There you will see the available options and be able to apply your
+preferred values.
 
-Much like Gnu Screen, we are setting up an "escape" key or in Emacs terms,
-a prefix. I prefer to use "C-\\" but you may set another value like so:
+Integration with your shell. While launching terminals, we will set an
+environment variable `EMACS_PS1` with the value set in
+`faux-screen-terminal-ps1`. Here is a helper bourne shell excerpt that you
+may want to use in your personal dotfile:
 
-    (setq faux-screen-keymap-prefix (kbd "C-8"))
+    if [ "x$EMACS_PS1" != "x" ]; then
+        PS1="$EMACS_PS1"
+    fi
+
 
 What does Faux Screen Provide Me?
 ---------------------------------
 
-With each terminal started, you can use the prefix / escape key to jump to
-the started terminals. That means with a prefix of `C-\\` you can jump to
-Term 3 via `C-\ 3`.
+With each terminal started, you can use the prefix/escape key + terminal
+number to jump to the started terminals. That means with a prefix of `C-\`
+you can jump to Term 3 via `C-\ 3`.
 
 Once you are within a Terminal, you can switch to next and previous via
-`C-\ n` and `C-\ -p`.
+`C-\ n` and `C-\ p`.
 
 You can finally run the escape key twice to return to the previous terminal
 by way of running `previous-buffer`.
