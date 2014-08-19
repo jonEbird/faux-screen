@@ -194,8 +194,8 @@ creation of the term such as term-mode-hook."
   (setq tab-width 8 )
   ; Override the default term+ background coloring
   (set-face-attribute 'term+input-readonly-face nil
-                      :background (face-background 'default)))
-
+                      :background (face-background 'default)
+                      :inherit '(highlight)))
 
 ;;; Main Interactive functions that user will call
 
