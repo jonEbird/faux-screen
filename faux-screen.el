@@ -191,7 +191,10 @@ creation of the term such as term-mode-hook."
   (setq mouse-yank-at-point t)
   (setq transient-mark-mode nil)
   (auto-fill-mode -1)
-  (setq tab-width 8 ))
+  (setq tab-width 8 )
+  ; Override the default term+ background coloring
+  (set-face-attribute 'term+input-readonly-face nil
+                      :background (face-background 'default)))
 
 
 ;;; Main Interactive functions that user will call
