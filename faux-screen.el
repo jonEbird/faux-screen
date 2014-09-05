@@ -185,7 +185,7 @@ creation of the term such as term-mode-hook."
   (ignore-errors
     (autopair-mode -1))
   ; Recommendations from term.el
-  (setq term-prompt-regexp "^[^#$%>\n]*[#$] +")
+  (setq term-prompt-regexp "^[^#$%>\n]*[#$%] +")
   (make-local-variable 'mouse-yank-at-point)
   (make-local-variable 'transient-mark-mode)
   (setq mouse-yank-at-point t)
