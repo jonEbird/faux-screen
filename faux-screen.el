@@ -57,6 +57,14 @@
   :group 'faux-screen
   :type 'integer)
 
+(defcustom faux-screen-utility-terminal 0
+  "Which terminal is your go-to temporary, utilty terminal? Should be a
+  valid index within the `faux-screen-num-terminals' number of
+  terminals. Is used to switch to and quickly cd to a new location via
+  `faux-screen-utility-jump' function"
+  :group 'faux-screen
+  :type 'integer)
+
 (defcustom faux-screen-shell "/bin/bash"
   "Default shell to use when creating new shells"
   :group 'faux-screen
@@ -166,6 +174,24 @@ subtract 1 and go to a buffer of that name if it exists."
                      (switch-to-buffer prev-buffer nil t)))))
           (t
            (previous-buffer)))))
+
+(defun faux-screen-utility-jump (&optional directory)
+  "Switch to your utility terminal as specified by
+  `faux-screen-utility-terminal' within the allocated terminals and send a
+  \"cd <directory>\" command and therefore quickly moving you to your
+  utilty terminal and cd'ing to the desired directory quickly"
+  (interactive)
+  (let* ((basedir (or directory (read-directory-name "Base Directory: ")))
+         (shell-name (format "Shell %d" faux-screen-utility-terminal))
+         (buffer-name (format "*%s*" shell-name))
+         (buffer (if faux-screen-inferior-shell
+                     (get-buffer shell-name)
+                   (get-buffer buffer-name))))
+    (if buffer
+        (progn
+          (switch-to-buffer buffer)
+          (term-send-raw-string (concat "cd " basedir "\n")))
+      (message "Missing your utility terminal"))))
 
 
 ;;; Faux Screen Setup functions

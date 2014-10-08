@@ -1,0 +1,24 @@
+#+TITLE:     Faux Screen
+#+AUTHOR:    Jon Miller
+#+EMAIL:     jonEbird@gmail.com
+#+DESCRIPTION: Faux Screen
+#+TODO: TODO(t) STARTED(s) DELEGATED(d@) WAITING(w@) | DONE(o@) INFO(i) CANCELED(c@)
+#+STARTUP: content noindent hidestars logrefile logredeadline logreschedule
+#+OPTIONS: toc:nil num:nil todo:nil tasks:t pri:nil tags:nil skip:t d:nil ^:{}
+
+* Faux Screen
+
+See the README for a brief introduction. This is primarily for myself to
+keep track of what I'm doing, issues, and goals for this project.
+
+* Features
+
+** TODO Spawn a New, Un-managed Terminal
+  [2014-10-07 Tue 21:20]
+
+I already occasionally like to spawn a quick throw away terminal. Perhaps
+it's the wrong habit, given the fact that I've created this Faux Terminal
+features of keeping terminals open, but nonetheless I think it would be
+good to do a minor refactoring to have a separate function that is
+designated for starting terminals. Can then specifically refactor
+faux-screen-terminals to use it.
