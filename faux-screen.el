@@ -39,42 +39,43 @@
   :group 'convenience)
 
 (defcustom faux-screen-keymap-prefix (kbd "C-\\")
-  "Prefix for faux screen commands ala the Gnu screen escape key"
+  "Prefix for faux screen commands ala the Gnu screen escape key."
   :group 'faux-screen
   :type 'string)
 
 (defcustom faux-screen-hide-buffers t
-  "Attempt to hide buffers from switch-buffer (C-x b)"
+  "Attempt to hide buffers from switch-buffer (C-x b)."
   :group 'faux-screen
   :type 'boolean)
 
 (defcustom faux-screen-num-terminals 8
-  "Number of terminals to launch by default"
+  "Number of terminals to launch by default."
   :group 'faux-screen
   :type 'integer)
 
 (defcustom faux-screen-utility-terminal 0
-  "Which terminal is your go-to temporary, utilty terminal? Should be a
-  valid index within the `faux-screen-num-terminals' number of
-  terminals. Is used to switch to and quickly cd to a new location via
+  "Which terminal is your go-to temporary, utilty terminal?
+Should be a valid index within the `faux-screen-num-terminals' number of
+terminals.  Is used to switch to and quickly cd to a new location via
   `faux-screen-utility-jump' function"
   :group 'faux-screen
   :type 'integer)
 
 (defcustom faux-screen-shell "/bin/bash"
-  "Default shell to use when creating new shells"
+  "Default shell to use when creating new shells."
   :group 'faux-screen
   :type 'string)
 
 (defcustom faux-screen-inferior-shell nil
-  "Use inferior shell (M-x shell) over default ansi-term"
+  "Use inferior shell (M-x shell) over default `ansi-term'."
   :group 'faux-screen
   :type 'boolean)
 
 (defcustom faux-screen-terminal-ps1 "(\\[\\e[1;32m\\]%s\\[\\e[0m\\]) \\W $ "
-  "Preferred PS1 syntax to be set in env var EMACS_PS1 that you can use
-within your shell's dotfiles. A single '%d' in the prompt will be replaced
-with the term number that is being launched."
+  "Provide a PS1 syntax that will be availalbe in variable EMACS_PS1.
+Recommneded to conditionally use EMACS_PS1 in your shell's dotfiles when
+available.  A single '%d' in the prompt will be replaced with the number
+term that is being launched."
   :group 'faux-screen
   :type 'string)
 
@@ -87,7 +88,7 @@ with the term number that is being launched."
     (define-key map (kbd "p") 'faux-screen-prev-dwim)
     (define-key map faux-screen-keymap-prefix 'previous-buffer)
     map)
-  "Keymap for Faux-Screen commands after `faux-screen-keymap-prefix'")
+  "Keymap for Faux-Screen commands after `faux-screen-keymap-prefix'.")
 (fset 'faux-screen-command-map faux-screen-command-map)
 
 (defvar faux-screen-mode-map
@@ -136,9 +137,9 @@ with the term number that is being launched."
 ;;; Quick Navigation Commands
 
 (defun faux-screen-next-dwim ()
-  "Go to the next terminal or just next buffer. Next terminal is based on
-the buffer name. Will extract the number from the buffer-name, add 1 and go
-to a buffer of that name if it exists."
+  "Go to the next terminal or just next buffer.
+Next terminal is based on the buffer name.  Will extract the number from
+the `buffer-name', add 1 and go to a buffer of that name if it exists."
   (interactive)
   (let ((cur-buffer (buffer-name))
         (mode (symbol-name major-mode)))
@@ -154,9 +155,10 @@ to a buffer of that name if it exists."
            (next-buffer)))))
 
 (defun faux-screen-prev-dwim ()
-  "Go to the previous terminal or just previous buffer. Previous terminal
-is based on the buffer name. Will extract the number from the buffer-name,
-subtract 1 and go to a buffer of that name if it exists."
+  "Go to the previous terminal or just previous buffer.
+Previous terminal is based on the buffer name.  Will extract the number
+from the `buffer-name', subtract 1 and go to a buffer of that name if it
+exists."
   (interactive)
   (let ((cur-buffer (buffer-name))
         (mode (symbol-name major-mode)))
@@ -172,10 +174,11 @@ subtract 1 and go to a buffer of that name if it exists."
            (previous-buffer)))))
 
 (defun faux-screen-utility-jump (&optional directory)
-  "Switch to your utility terminal as specified by
-  `faux-screen-utility-terminal' within the allocated terminals and send a
-  \"cd <directory>\" command and therefore quickly moving you to your
-  utilty terminal and cd'ing to the desired directory quickly"
+  "Switch to your utility terminal.
+Terminal is specified by `faux-screen-utility-terminal' within the
+allocated terminals and send a \"cd <directory>\" command and therefore
+quickly moving you to your utilty terminal and cd'ing to the desired
+DIRECTORY quickly"
   (interactive)
   (let* ((basedir (or directory (read-directory-name "Base Directory: ")))
          (shell-name (format "Shell %d" faux-screen-utility-terminal))
@@ -190,9 +193,9 @@ subtract 1 and go to a buffer of that name if it exists."
       (message "Missing your utility terminal"))))
 
 (defun faux-screen-utility-terminal (name)
-  "Returns an anonymous function that will create and switch to a new shell
-based on provided name. The function can also take a directory which will
-be send a cd command for convenience."
+  "Return an anonymous function for creating a terminal named after NAME.
+The utility function accepts an optional DIRECTORY which will be used to
+send a \"cd\" command to the shell"
   `(lambda (&optional directory)
      (interactive)
      (faux-screen-new-terminal ,name t)
@@ -203,7 +206,7 @@ be send a cd command for convenience."
 ;;; Faux Screen Setup functions
 
 (defun faux-screen-init ()
-  "One time init function to help setup common items"
+  "One time init function to help setup common items."
   ; Optionally hide shells from ido switch buffer
   (if faux-screen-hide-buffers
       (if (boundp 'ido-ignore-buffers)
@@ -212,14 +215,14 @@ be send a cd command for convenience."
 ;; Taken from http://joelmccracken.github.io/entries/\
 ;;                   switching-between-term-mode-and-line-mode-in-emacs-term/
 (defun term-toggle-mode ()
-  "Toggles term between line mode and char mode"
+  "Toggle term between line mode and char mode."
   (interactive)
   (if (term-in-line-mode)
       (term-char-mode)
     (term-line-mode)))
 
 (defun faux-keyboard-cleanup ()
-  "Redefine a few keystrokes to make term more usable"
+  "Redefine a few keystrokes to make term more usable."
   (define-key term-mode-map (kbd "M-RET") 'term-toggle-mode)
   (define-key term-raw-map (kbd "M-RET") 'term-toggle-mode)
   ;; Re-add missing key sequences to term-raw-map
@@ -233,8 +236,9 @@ be send a cd command for convenience."
        (call-interactively ',(lookup-key global-map (kbd "M-x"))))))
 
 (defun faux-screen-setup ()
-  "Perform sane setup for a term. Intended to be ran within a hook upon
-creation of the term such as term-mode-hook."
+  "Perform sane setup for a term.
+Intended to be ran within a hook upon creation of the term such as
+term-mode-hook."
   (setq truncate-lines t)
   ; Modes that should not be enabled
   (ignore-errors
@@ -252,10 +256,10 @@ creation of the term such as term-mode-hook."
 (defun faux-screen-new-terminal (N &optional switch shell directory inferior)
   "Start a new terminal numbered by N if not already started.
 
-Will use `faux-screen-shell' if shell is not passed. Shell will be an
-ansi-term unless inferior or `faux-screen-inferior-shell' is true and the
-shell will be started in your home directory unless directory is
-passed. Finally, will switch to the shell buffer if switch is true"
+Will switch to buffer if SWITCH is true.  Which shell is ran is determined
+by `faux-screen-shell' when SHELL is not passed.  The shell will be started
+in your home directory unless DIRECTORY is passed.  Shell will be an
+`ansi-term' unless INFERIOR or `faux-screen-inferior-shell' is true."
   (interactive)
   (let* ((default-directory (expand-file-name (or directory "~/")))
          (shell-name (format "Shell %s" N))
@@ -275,10 +279,10 @@ passed. Finally, will switch to the shell buffer if switch is true"
 (defun faux-screen-terminals (&optional N shell inferior)
   "Create a set of commonly used terminals ala GNU screen.
 
-Will create 8 ansi shells unless you specific `N`. Can also pass
-which `shell` you would like to use with /bin/bash being the
-default. Finally anything but nil for `inferior` will cause us to
-launch shell (the inferior shell) instead of ansi-term."
+Will create `faux-screen-num-terminals' number of shells unless you specify
+N.  `faux-screen-shell' is used for shell if SHELL is not specified.
+Finally anything but nil for INFERIOR will cause us to launch `shell', the
+inferior shell, instead of `ansi-term'"
   (interactive)
   (let ((times (or N faux-screen-num-terminals))
         (default-directory (expand-file-name "~/"))
