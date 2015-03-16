@@ -1,5 +1,4 @@
 (:name faux-screen
        :description "Faux Gnu Screen in Emacs"
        :type github
-       :pkgname "jonEbird/faux-screen"
-       :depends (term+ term+ki term+mux))
+       :pkgname "jonEbird/faux-screen")

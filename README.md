@@ -1,32 +1,22 @@
 Faux Screen
 ==============================
 
-Basically a personal journey of encoding my
-[Gnu Screen](http://www.gnu.org/software/screen/) configuration into
-Emacs. While I know there are others that have blazed the trails in
+Basically a personal journey of encoding my [Gnu Screen][GS] configuration
+into Emacs. While I know there are others that have blazed the trails in
 improving the basic Emacs term.el support, I just wanted to encode my
 workflow along with taking advantage of other folks work.
 
 Installation
 ------------------------------
 
-I tend to use el-get and here is a recipe:
+I tend to use el-get and here is a recipe you can use:
 
     (:name faux-screen
            :description "Faux Gnu Screen in Emacs"
            :type github
-           :pkgname "jonEbird/faux-screen"
-           :depends (term+ term+ki term+mux))
+           :pkgname "jonEbird/faux-screen")
 
-You can otherwise clone the repo and update your `load-path`
-appropriately. If you do go this route, you'll want to install
-[term+](tarao/term-plus-el), [term+ki](tarao/term-plus-ki-el) and
-[term+mux](tarao/term-plus-mux-el). Those are all links to the correct
-project pages but I'd suggest using package.el and install them that
-way. Something like:
-
-    (dolist (package '(term+ term+key-intercept term+mux))
-      (package-install package))
+You can otherwise clone the repo and update your `load-path` appropriately.
 
 Configuration
 ------------------------------
@@ -40,7 +30,9 @@ Quick start. Add this block to your config:
     (require 'faux-screen)
     (faux-screen-global-mode)
 
-In that example, I'm starting 10 ansi terminals. Most of those values are also defaults but I'm just re-defining them as an example for those that want to change the values a bit.
+In that example, I'm starting 10 ansi terminals. Most of those values are
+also defaults but I'm just re-defining them as an example for those that
+want to change the values a bit.
 
 An easy way to get an idea of the options available with this project is to
 use the customize routines. Run M-x `customize-group` RET `faux-screen`
@@ -55,7 +47,6 @@ may want to use in your personal dotfile:
     if [ "x$EMACS_PS1" != "x" ]; then
         PS1="$EMACS_PS1"
     fi
-
 
 What does Faux Screen Provide Me?
 ---------------------------------
@@ -78,8 +69,43 @@ functions for that:
     (global-set-key [C-next]  'faux-screen-next-dwim)
     (global-set-key [C-prior] 'faux-screen-prev-dwim)
 
+Utility or Project Specific Shells
+----------------------------------
+
+It can also be helpful to launch a utility shell or one that is specific to
+your project. For this situation, I have a `faux-screen-utility-terminal`
+function that can be used to create a uniquely named terminal. It
+technically returns a function that you can then bind to a key or just
+immediately call. The returned function also supported an optional
+DIRECTORY parameter that will have the effect of sending a "cd" command for
+you within the shell.
+
+Here are a few examples that I use:
+
+1. Start or jump to my utility shell with the current directory my buffer is located at
+
+        ;; Setup a utility terminal to be used in ad-hoc situations using the
+        ;; current default-directory location
+        (global-set-key (kbd "<f12>")
+                        (lambda ()
+                          (interactive)
+                          (funcall (faux-screen-utility-terminal "Utility") default-directory)))
+
+2. Integrate with [Projectile][Projectile] to use their known, base
+   directory of current project for a `prj` shell.
+
+        ;; Integrate with projectile
+        (defun projectile-utility-shell ()
+          (interactive)
+          (funcall (faux-screen-utility-terminal "prj") (projectile-project-root)))
+        (define-key projectile-command-map (kbd "$") 'projectile-utility-shell)
+
+
 Contribution
 ------------------------------
 
 While this project is primarily an expression of my own workflow, if you
 find it useful and have useful contribution, please send me a pull request.
+
+[GS]: http://www.gnu.org/software/screen/
+[Projectile]: https://github.com/bbatsov/projectile
