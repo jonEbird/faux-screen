@@ -1,14 +1,75 @@
 ;;; faux-screen.el --- Faux Gnu Screen in Emacs
 
-;;; Commentary:
 ;; Author: Jon Miller <jonEbird at gmail.com>
 ;; URL: https://github.com/jonEbird/faux-screen
 ;; Version: 0.2
 ;; Keywords: terminal, emulation
 
-;; Imitate my very personal Gnu screen setup within Emacs while taking
-;; advantage of the awesome work by INA Lintaro and his term+
-;; contributions.
+;;; Commentary:
+
+;; This package started out as a way to imitate my personal GNU screen
+;; setup within Emacs while also working to make terminals more usable in
+;; the process. That is why it is called faux-screen, as in a fake GNU
+;; screen setup within Emacs.
+;;
+;; At it's most basic level, this package setups up a set of terminals
+;; numerically numbered and establishes a keyboard prefix for switching to
+;; them quickly. E.g. Having 10 terminals created and switching to terminal
+;; 3 immediately via "C-\ 3" where "C-\" is the default faux-screen prefix
+;; key but can be set via `faux-screen-keymap-prefix'. The terminals are
+;; not started immediately but only when you first switch to them.
+;;
+;; Faux-screen helps you customize your shell experience by defining unique
+;; EMACS_PS1 environment variables for each terminal that you can use to
+;; set your PS1 shell prompt to. I have the following in my ~/.bashrc:
+;;
+;;     # PS1 and related Status
+;;     if [ "$(ps --no-headers -o comm -p $PPID)" == "emacs" ]; then
+;;         if [ -n "$EMACS_PS1" ]; then
+;;             PS1="$EMACS_PS1"
+;;         else
+;;             PS1="\W $ "
+;;         fi
+;;         export PAGER=emacspager
+;;     else
+;;         # Standard PS1
+;;         PS1="[\u@\h \W]\$ "
+;;     fi
+;;
+;; That will setup a nice and concise PS1 shell prompt when a terminal is
+;; launched within Emacs and the EMACS_PS1 variable is being setup by this
+;; package.
+;;
+;; You can use the customize interface for setting various faux-screen
+;; attributes. Run `customize-group' and pick `faux-screen'
+;;
+;; Here is a sample Emacs config in how you can use this package:
+;;
+;;     (setq faux-screen-num-terminals 10
+;;           faux-screen-keymap-prefix (kbd "C-\\")
+;;           faux-screen-terminal-ps1 "(\\[\\e[1;36m\\]%s\\[\\e[0m\\]) \\W $ ")
+;;     (require 'faux-screen)
+;;     (faux-screen-global-mode)
+;;
+;;     ;; Initialize our terminals
+;;     (faux-screen-terminals)
+;;
+;;     ;; Setup a utility terminal to be used in ad-hoc situations using the
+;;     ;; current default-directory location
+;;     (global-set-key (kbd "<f12>")
+;;                     (lambda ()
+;;                       (interactive)
+;;                       (funcall (faux-screen-utility-terminal "Utility") default-directory)))
+;;
+;;     ;; Integrate with projectile
+;;     (defun projectile-utility-shell ()
+;;       (interactive)
+;;       (funcall (faux-screen-utility-terminal "prj") (projectile-project-root)))
+;;     (define-key projectile-command-map (kbd "$") 'projectile-utility-shell)
+;;
+;;     ;; Optional key bindings for cycling between terminals:
+;;     (global-set-key [C-next]  'faux-screen-next-dwim)
+;;     (global-set-key [C-prior] 'faux-screen-prev-dwim)
 
 ;; This file is NOT part of GNU Emacs.
 
