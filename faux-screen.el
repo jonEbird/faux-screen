@@ -1,10 +1,10 @@
 ;;; faux-screen.el --- Faux Gnu Screen in Emacs
 
+;;; Commentary:
 ;; Author: Jon Miller <jonEbird at gmail.com>
 ;; URL: https://github.com/jonEbird/faux-screen
-;; Version: 0.1
+;; Version: 0.2
 ;; Keywords: terminal, emulation
-;; Package-Requires: ((term+ "0.1") (term+key-intercept "0.1") (term+mux "0.1"))
 
 ;; Imitate my very personal Gnu screen setup within Emacs while taking
 ;; advantage of the awesome work by INA Lintaro and his term+
@@ -29,11 +29,7 @@
 
 ;;; Code:
 
-(require 'term+)
-(ignore-errors
-  (require 'xterm-256color))
-(require 'term+key-intercept)
-(require 'term+mux)
+(require 'term)
 
 
 ;;; Customization
@@ -75,7 +71,7 @@
   :group 'faux-screen
   :type 'boolean)
 
-(defcustom faux-screen-terminal-ps1 "(\\[\\e[1;32m\\]%d\\[\\e[0m\\]) \\W $ "
+(defcustom faux-screen-terminal-ps1 "(\\[\\e[1;32m\\]%s\\[\\e[0m\\]) \\W $ "
   "Preferred PS1 syntax to be set in env var EMACS_PS1 that you can use
 within your shell's dotfiles. A single '%d' in the prompt will be replaced
 with the term number that is being launched."
@@ -104,14 +100,14 @@ with the term number that is being launched."
   "Minor mode to imitate Gnu screen terminal management
 
 \\{faux-screen-mode-map}"
-  :lighter "fs"
+  :lighter " fs"
   :keymap faux-screen-mode-map
   :group 'faux-screen
   :require 'faux-screen
   (cond
    (faux-screen-mode
     (faux-screen-init)
-    (add-hook 'term-mode-hook 'faux-screen-setup))
+    (add-hook 'term-mode-hook 'faux-screen-setup t))
    (t
     (remove-hook 'term-mode-hook 'faux-screen-setup t))))
 
@@ -150,7 +146,7 @@ to a buffer of that name if it exists."
                (equal mode "shell-mode"))
            (if (string-match "\\([0-9]+\\)" cur-buffer)
                (let* ((n (match-string-no-properties 0 cur-buffer))
-                      (next (int-to-string (+ (string-to-int n) 1)))
+                      (next (number-to-string (+ (string-to-number n) 1)))
                       (next-buffer (replace-regexp-in-string n next cur-buffer)))
                  (if (get-buffer next-buffer)
                      (switch-to-buffer next-buffer nil) t))))
@@ -168,7 +164,7 @@ subtract 1 and go to a buffer of that name if it exists."
                (equal mode "shell-mode"))
            (if (string-match "\\([0-9]+\\)" cur-buffer)
                (let* ((n (match-string-no-properties 0 cur-buffer))
-                      (prev (int-to-string (- (string-to-int n) 1)))
+                      (prev (number-to-string (- (string-to-number n) 1)))
                       (prev-buffer (replace-regexp-in-string n prev cur-buffer)))
                  (if (get-buffer prev-buffer)
                      (switch-to-buffer prev-buffer nil t)))))
@@ -193,6 +189,16 @@ subtract 1 and go to a buffer of that name if it exists."
           (term-send-raw-string (concat "cd " basedir "\n")))
       (message "Missing your utility terminal"))))
 
+(defun faux-screen-utility-terminal (name)
+  "Returns an anonymous function that will create and switch to a new shell
+based on provided name. The function can also take a directory which will
+be send a cd command for convenience."
+  `(lambda (&optional directory)
+     (interactive)
+     (faux-screen-new-terminal ,name t)
+     (if directory
+         (term-send-raw-string (concat "cd " directory "\n")))))
+
 
 ;;; Faux Screen Setup functions
 
@@ -203,6 +209,29 @@ subtract 1 and go to a buffer of that name if it exists."
       (if (boundp 'ido-ignore-buffers)
           (add-to-list 'ido-ignore-buffers "Shell " t))))
 
+;; Taken from http://joelmccracken.github.io/entries/\
+;;                   switching-between-term-mode-and-line-mode-in-emacs-term/
+(defun term-toggle-mode ()
+  "Toggles term between line mode and char mode"
+  (interactive)
+  (if (term-in-line-mode)
+      (term-char-mode)
+    (term-line-mode)))
+
+(defun faux-keyboard-cleanup ()
+  "Redefine a few keystrokes to make term more usable"
+  (define-key term-mode-map (kbd "M-RET") 'term-toggle-mode)
+  (define-key term-raw-map (kbd "M-RET") 'term-toggle-mode)
+  ;; Re-add missing key sequences to term-raw-map
+  (define-key term-raw-map (kbd "M-:")
+    (lambda ()
+      (interactive)
+      (call-interactively 'eval-expression)))
+  (define-key term-raw-map (kbd "M-x")
+    `(lambda ()
+       (interactive)
+       (call-interactively ',(lookup-key global-map (kbd "M-x"))))))
+
 (defun faux-screen-setup ()
   "Perform sane setup for a term. Intended to be ran within a hook upon
 creation of the term such as term-mode-hook."
@@ -211,19 +240,37 @@ creation of the term such as term-mode-hook."
   (ignore-errors
     (autopair-mode -1))
   ; Recommendations from term.el
-  (setq term-prompt-regexp "^[^#$%>\n]*[#$%] +")
+  (setq term-prompt-regexp "^[^#$%\n]*[#$%] +")
   (make-local-variable 'mouse-yank-at-point)
-  (make-local-variable 'transient-mark-mode)
   (setq mouse-yank-at-point t)
-  (setq transient-mark-mode nil)
   (auto-fill-mode -1)
   (setq tab-width 8 )
-  ; Override the default term+ background coloring
-  (set-face-attribute 'term+input-readonly-face nil
-                      :background (face-background 'default)
-                      :inherit '(highlight)))
+  (faux-keyboard-cleanup))
 
 ;;; Main Interactive functions that user will call
+
+(defun faux-screen-new-terminal (N &optional switch shell directory inferior)
+  "Start a new terminal numbered by N if not already started.
+
+Will use `faux-screen-shell' if shell is not passed. Shell will be an
+ansi-term unless inferior or `faux-screen-inferior-shell' is true and the
+shell will be started in your home directory unless directory is
+passed. Finally, will switch to the shell buffer if switch is true"
+  (interactive)
+  (let* ((default-directory (expand-file-name (or directory "~/")))
+         (shell-name (format "Shell %s" N))
+         (buffer-name (format "*%s*" shell-name)))
+    (unless (get-buffer buffer-name)
+      (setenv "EMACS_PS1" (format faux-screen-terminal-ps1 N))
+      (save-window-excursion
+        (if (or inferior faux-screen-inferior-shell)
+            (shell buffer-name)
+          (ansi-term (or shell faux-screen-shell) shell-name)))
+      (with-current-buffer buffer-name
+        (local-unset-key faux-screen-keymap-prefix))
+      (setenv "EMACS_PS1" ""))
+    (if switch
+        (switch-to-buffer (get-buffer buffer-name)))))
 
 (defun faux-screen-terminals (&optional N shell inferior)
   "Create a set of commonly used terminals ala GNU screen.
@@ -233,32 +280,15 @@ which `shell` you would like to use with /bin/bash being the
 default. Finally anything but nil for `inferior` will cause us to
 launch shell (the inferior shell) instead of ansi-term."
   (interactive)
-  (let ((escape-key faux-screen-keymap-prefix)
-        (started-terms '())
-        (times (or N faux-screen-num-terminals))
+  (let ((times (or N faux-screen-num-terminals))
         (default-directory (expand-file-name "~/"))
-        (explicit-shell-file-name (or shell faux-screen-shell)))
+        (shell-name (or shell faux-screen-shell)))
     (dotimes (n times)
-      (let* ((shell-name (format "Shell %d" n))
-             (buffer-name (format "*%s*" shell-name)))
-        (define-key faux-screen-command-map (kbd (format "%d" n))
-          `(lambda ()
-             (interactive)
-             (switch-to-buffer ,buffer-name nil t)))
-        (unless (get-buffer buffer-name)
-          (add-to-list 'started-terms n t)
-          (setenv "EMACS_PS1" (format faux-screen-terminal-ps1 n))
-          (save-window-excursion
-            (if (or inferior faux-screen-inferior-shell)
-                (shell buffer-name)
-              (ansi-term explicit-shell-file-name shell-name)))
-          (with-current-buffer buffer-name
-            (local-unset-key escape-key)))))
-    ; Cleanup
-    (setenv "EMACS_PS1" "")
-    (if started-terms
-        (message (format "Started shells %s" started-terms))
-      (message "Your %d terms are already started" times))))
+      (define-key faux-screen-command-map (kbd (format "%d" n))
+        `(lambda ()
+           (interactive)
+           (faux-screen-new-terminal ,n t ,shell-name ,default-directory
+                                     ,(or inferior faux-screen-inferior-shell)))))))
 
 (provide 'faux-screen)
 ;;; faux-screen.el ends here

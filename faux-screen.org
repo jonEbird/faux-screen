@@ -13,7 +13,11 @@ keep track of what I'm doing, issues, and goals for this project.
 
 * Features
 
-** TODO Spawn a New, Un-managed Terminal
+** DONE Spawn a New, Un-managed Terminal
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2015-03-16 Mon 11:03] \\
+     Created faux-screen-utility-terminal() for this purpose
+   :END:
   [2014-10-07 Tue 21:20]
 
 I already occasionally like to spawn a quick throw away terminal. Perhaps
@@ -22,3 +26,15 @@ features of keeping terminals open, but nonetheless I think it would be
 good to do a minor refactoring to have a separate function that is
 designated for starting terminals. Can then specifically refactor
 faux-screen-terminals to use it.
+
+** TODO Fix Escapekey-Escapekey to truly be go-back-to-previous buffer
+   [2014-11-10 Mon 17:43]
+
+Currently cheaply using =(previous-buffer)= and what I really mean to use
+it a switch to previous non-terminal buffer that was used to jump to the
+terminal.
+- Should probably find a hook for buffer switching and/or advise
+  function(s) to monitor when switching to one of my terminals occurs.
+- Need to track last buffer with a simple variable and perhaps default to
+  calling =(previous-buffer)= only when variable is somehow unavailable /
+  unset.
