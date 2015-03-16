@@ -61,6 +61,12 @@ Once you are within a Terminal, you can switch to next and previous via
 You can finally run the escape key twice to return to the previous terminal
 by way of running `previous-buffer`.
 
+Additional keyboard modifications are done to `term` itself:
+
+    M-RET - Goes between char / line mode within term
+    M-: - Makes these available to term-mode
+    M-x - Makes these available to term-mode
+
 Extra, bonus config. I like to use C-pgdn and C-pgup to move about my
 terminals and when I'm not in a terminal, I use it to move to next/prior
 buffer. You can use my `faux-screen-next-dwim` and `faux-screen-prev-dwim`
