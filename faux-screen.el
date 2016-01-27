@@ -147,7 +147,7 @@ term that is being launched."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "n") 'faux-screen-next-dwim)
     (define-key map (kbd "p") 'faux-screen-prev-dwim)
-    (define-key map faux-screen-keymap-prefix 'previous-buffer)
+    (define-key map faux-screen-keymap-prefix 'mode-line-other-buffer)
     map)
   "Keymap for Faux-Screen commands after `faux-screen-keymap-prefix'.")
 (fset 'faux-screen-command-map faux-screen-command-map)
