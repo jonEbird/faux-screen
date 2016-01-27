@@ -282,10 +282,22 @@ send a \"cd\" command to the shell"
       (term-char-mode)
     (term-line-mode)))
 
+;; Quick paste of text into an ansi-term regardless of which mode you currently are in
+(defun term-yank ()
+  "Yank text into the buffer for input regardless of current input mode."
+  (interactive)
+  (if (term-in-line-mode)
+      (yank)
+    (term-line-mode)
+    (yank)
+    (term-char-mode)))
+
 (defun faux-keyboard-cleanup ()
   "Redefine a few keystrokes to make term more usable."
   (define-key term-mode-map (kbd "M-RET") 'term-toggle-mode)
   (define-key term-raw-map (kbd "M-RET") 'term-toggle-mode)
+  (define-key term-mode-map (kbd "M-y") 'term-yank)
+  (define-key term-raw-map (kbd "M-y") 'term-yank)
   ;; Re-add missing key sequences to term-raw-map
   (define-key term-raw-map (kbd "M-:")
     (lambda ()
