@@ -321,7 +321,8 @@ term-mode-hook."
   (make-local-variable 'mouse-yank-at-point)
   (setq mouse-yank-at-point t)
   (auto-fill-mode -1)
-  (setq tab-width 8 )
+  (setq tab-width 8
+        term-buffer-maximum-size 10000)
   (faux-keyboard-cleanup))
 
 ;;; Main Interactive functions that user will call
