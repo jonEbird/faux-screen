@@ -250,7 +250,8 @@ DIRECTORY quickly"
     (if buffer
         (progn
           (switch-to-buffer buffer)
-          (term-send-raw-string (concat "cd " basedir "\n")))
+          (term-send-raw-string (concat "cd " basedir "\n"))
+          (setq default-directory basedir))
       (message "Missing your utility terminal"))))
 
 (defun faux-screen-utility-terminal (name)
@@ -261,7 +262,9 @@ send a \"cd\" command to the shell"
      (interactive)
      (faux-screen-new-terminal ,name t)
      (if directory
-         (term-send-raw-string (concat "cd " directory "\n")))))
+         (progn
+           (term-send-raw-string (concat "cd " directory "\n"))
+           (setq default-directory directory)))))
 
 
 ;;; Faux Screen Setup functions
@@ -280,7 +283,8 @@ send a \"cd\" command to the shell"
   (interactive)
   (if (term-in-line-mode)
       (term-char-mode)
-    (term-line-mode)))
+    (save-mark-and-excursion
+      (term-line-mode))))
 
 ;; Quick paste of text into an ansi-term regardless of which mode you currently are in
 (defun term-yank ()
@@ -298,6 +302,8 @@ send a \"cd\" command to the shell"
   (define-key term-raw-map (kbd "M-RET") 'term-toggle-mode)
   (define-key term-mode-map (kbd "M-y") 'term-yank)
   (define-key term-raw-map (kbd "M-y") 'term-yank)
+  ;; Re-use org open link features
+  (define-key term-mode-map (kbd "C-c C-o") 'org-open-at-point)
   ;; Re-add missing key sequences to term-raw-map
   (define-key term-raw-map (kbd "M-:")
     (lambda ()
@@ -320,7 +326,9 @@ term-mode-hook."
   (setq term-prompt-regexp "^[^#$%\n]*[#$%] +")
   (make-local-variable 'mouse-yank-at-point)
   (setq mouse-yank-at-point t)
+  (goto-address-mode 1)
   (auto-fill-mode -1)
+  (setq bidi-paragraph-direction 'left-to-right)
   (setq tab-width 8
         term-buffer-maximum-size 10000)
   (faux-keyboard-cleanup))
